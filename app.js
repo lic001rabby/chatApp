@@ -6,7 +6,8 @@ var app = express();
 var server = app.listen(3000);
 var io = require('socket.io').listen(server);
 var router = express.Router();
-
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 
 //starting the server
@@ -44,9 +45,10 @@ app.post('/login', urlencodedParser, function (req, res) {
 
 //handle new session
 
-app.post('/home', urlencodedParser, function (req, res) {
+
+app.post('/home', function (req, res) {
   if (!req.body) return res.sendStatus(400);
-	  console.log(req.body.sessionid);
+	  console.log(req.body);
     return res.sendStatus(200);
 });
 
@@ -58,31 +60,35 @@ io.on('connection', function (socket) {
   var addedUser = false;
 
   // when the client emits 'new message', this listens and executes
-  socket.on('new message', function (data) {
+  socket.on('new message', function (username, message) {
     // we tell the client to execute 'new message'
-    socket.broadcast.emit('new message', {
-      username: socket.username,
-      message: data
+    console.log(message);
+    socket.broadcast.to(socket.room).emit('incoming message', {
+      username: username,
+      message: message
     });
   });
 
   // when the client emits 'add user', this listens and executes
-  socket.on('add user', function (username) {
+  socket.on('add user', function (username, sessionid) {
     // we store the username in the socket session for this client
     socket.username = username;
+    // store the room name in the socket session for this client
+		socket.room = sessionid;
+    // set the session
+		socket.join(sessionid);
       console.log(username);
-      console.log(numUsers);
+      console.log(sessionid);
     // add the client's username to the global list
     usernames[username] = username;
+    
     ++numUsers;
     addedUser = true;
-    socket.emit('login', {
-      numUsers: numUsers
-    });
+    socket.emit('login', sessionid);
     // echo globally (all clients) that a person has connected
-    socket.broadcast.emit('user joined', {
+    socket.broadcast.to(socket.room).emit('user joined', {
       username: socket.username,
-      numUsers: numUsers
+      sessionname: socket.room
     });
   });
 
@@ -90,6 +96,7 @@ io.on('connection', function (socket) {
 });
 
 //database debug
+/*
 var chat = new Chat();
 chat.session = 'trial';
 
@@ -106,7 +113,7 @@ Chat.find ({}, '_id', function(err,ids){
     console.log(element._id);
   }, this);
   
-});
+});*/
 
 
 

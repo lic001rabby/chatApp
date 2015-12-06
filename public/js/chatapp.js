@@ -16,8 +16,10 @@ teamChat.config(function($stateProvider, $urlRouterProvider){
                 templateUrl: "templates/chatwindow.html"
             },
            'chatbox@chatting': {
-                templateUrl: "templates/chatbox.html"
+                templateUrl: "templates/chatbox.html",
+                controller: "chatCtrl"
             }
+            
         }
     
     })
@@ -110,7 +112,9 @@ teamChat.controller('sessionCtrl',['$scope','$cookies', '$location', '$http', fu
      $http({
       method: 'POST',
       url: '/home',
-      data: {'sessionid': 'test' }
+      data: {'sessionid': $scope.sname,
+             'username': $cookies.get('username')
+       }
       
     }).then(function successCallback(response) {
         // this callback will be called asynchronously
@@ -131,14 +135,64 @@ teamChat.controller('sessionCtrl',['$scope','$cookies', '$location', '$http', fu
     
 }]);
 
-teamChat.controller('chatCtrl', [ '$scope','chatService','$cookies' , function($scope, chatService, $cookies) {
-    chatService.setUsername($cookies.get('username'));
-    chatService.sendMessage('rabby','this is amazing'); 
+teamChat.controller('chatCtrl', [ '$scope', '$cookies' , function($scope, $cookies) {
+  var socket = io();
+  $scope.$watch('msg', function(newval, oldval) {
+       console.log(newval);
+    });
+//PRIMARY FUNCTIONS
+  // Sets the client's username
+  var setUsername = function (username, sessionid) {
+    
+
+    // If the username is valid
+    if (username) {
+
+      
+      // Tell the server your username
+      socket.emit('add user', username, sessionid);
+    }
+  }
+
+  // Sends a chat message
+  var sendMessage = function (username, message) {
+    // Prevent markup from being injected into the message
+    // if there is a non-empty message and a socket connection
+    if (message) {
+      // tell server to execute 'new message' and send along one parameter
+      console.log(message);
+      socket.emit('new message', username, message);
+    }
+  };
+  // Socket events
+
+  // Whenever the server emits 'login', log the login message
+  socket.on('login', function (data) {
+    var connected = true;
+    // Display the welcome message
+    var message = "Welcome to this session about "+ data;
+    console.log(message);
+    
+  });
+  
+  // Whenever the server emits 'user joined', log it in the chat body
+  socket.on('user joined', function (data) {
+    console.log(data.username + ' joined ' + data.sessionname); 
+  });
+  
+  //output the messages
+  socket.on('incoming message', function (data) {
+    console.log(data.username + ' said- ' + data.message); 
+  });
+  
+  //CODE IN ACTION
+  setUsername($cookies.get('username'), $cookies.get('sessionid'));
+  $scope.submit = function() {
+    sendMessage($cookies.get('username'), $scope.msg);
+    $scope.msg = '';
+    console.log('fired');
+  }
 }]);
-
-
-
-
 
 //SERVICES
 teamChat.service('sessionService', function(){
@@ -148,75 +202,3 @@ teamChat.service('sessionService', function(){
 teamChat.service('userService', function(){
     this.user = '';
 });
-
-//---------------------------
-
-teamChat.service('chatService', function(){
-
-  // Initialize variables
- 
-
-  var socket = io();
-
-
-
-  // Sets the client's username
-  this.setUsername = function (username) {
-    
-
-    // If the username is valid
-    if (username) {
-
-
-      // Tell the server your username
-      socket.emit('add user', username);
-    }
-  }
-
-  // Sends a chat message
-  this.sendMessage = function (username, message) {
-    // Prevent markup from being injected into the message
-    // if there is a non-empty message and a socket connection
-    if (message) {
-      
-      
-      // tell server to execute 'new message' and send along one parameter
-      socket.emit('new message', message);
-    }
-  }
-
- 
-
-
-
-
-  // Socket events
-
-  // Whenever the server emits 'login', log the login message
-  socket.on('login', function (data) {
-    var connected = true;
-    // Display the welcome message
-    var message = "Welcome to Socket.IO Chat – ";
-    console.log(message, {
-      prepend: true
-    });
-    
-  });
-
-  
-  // Whenever the server emits 'user joined', log it in the chat body
-  socket.on('user joined', function (data) {
-    console.log(data.username + ' joined');
-    console.log(data.numUsers + ' users total');
-    
-    
-  });
-});
-
- 
-
-//----------------------
-
-//DIRECTIVES
-
-
