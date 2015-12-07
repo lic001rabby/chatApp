@@ -1,0 +1,31 @@
+<div>
+            
+            <ul class="sidebar-nav">
+                <li class="sidebar-brand">
+                    <a ng-click="isCollapsed = !isCollapsed">Active Sessions <span aria-hidden="true" ng-class="class"></span></a>
+                    
+                    
+                    </a>
+                </li>
+                <div uib-collapse="isCollapsed">
+                    
+                        <li ng-repeat="item in maininfo.active"><a href="/#/chat/{{item._id}}">{{item.sessionName}}</a></li>
+                       
+                </div>
+            </ul>
+            </div>
+            <div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-brand">
+                    <a ng-click="isCollapsed = !isCollapsed">History <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a>
+                    
+                    </a>
+                </li>
+                    <div uib-collapse="isCollapsed">
+                        <li>
+                            <a href="#">Dashboard</a>
+                        </li>
+                       
+                    </div>
+            </ul>
+            </div>

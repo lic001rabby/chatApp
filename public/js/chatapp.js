@@ -10,7 +10,7 @@ teamChat.config(function($stateProvider, $urlRouterProvider){
     
     $stateProvider
     .state('chatting', {
-        url: "/chat/{sessionID}",
+        url: "/chat/{sessionid}",
         views: {
             mainModule: {
                 templateUrl: "templates/chatwindow.html"
@@ -133,17 +133,18 @@ teamChat.controller('sessionCtrl',['$scope','$cookies', '$location', '$http','so
      $scope.maininfo.sessionname = data.sessionname;
      $scope.maininfo.sessionid = data.sessionid;
      $cookies.put('sessionid', data.sessionid);
-     $location.path("/chat");
+     $location.path("/chat/"+ data.sessionid);
      
    })
     
     
 }]);
 
-teamChat.controller('chatCtrl', [ '$scope', '$cookies','socketService' , function($scope, $cookies,socketService) {
+teamChat.controller('chatCtrl', [ '$scope', '$cookies','$stateParams', 'socketService' , function($scope, $cookies, $stateParams, socketService) {
   $scope.$watch('msg', function(newval, oldval) {
        console.log(newval);
     });
+   $cookies.put('sessionid', $stateParams.sessionid)
 //PRIMARY FUNCTIONS
   // Sets the client's username
   var setUsername = function (username, sessionid) {

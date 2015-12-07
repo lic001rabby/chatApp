@@ -3,68 +3,7 @@
         <!-- Sidebar -->
         <div id="sidebar-wrapper">
             
-            <ul class="sidebar-nav">
-                <li class="sidebar-brand">
-                    <a data-toggle="collapse" href="#collapse1">Active Sessions <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a>
-                    
-                    
-                    </a>
-                </li>
-                    <div id="collapse1" class="panel-collapse collapse">
-                        <li>
-                            <a href="#">Dashboard</a>
-                        </li>
-                        <li>
-                            <a href="#">Shortcuts</a>
-                        </li>
-                        <li>
-                            <a href="#">Overview</a>
-                        </li>
-                        <li>
-                            <a href="#">Events</a>
-                        </li>
-                        <li>
-                            <a href="#">About</a>
-                        </li>
-                        <li>
-                            <a href="#">Services</a>
-                        </li>
-                        <li>
-                            <a href="#">Contact</a>
-                        </li>
-                    </div>
-            </ul>
-            <ul class="sidebar-nav">
-                <li class="sidebar-brand">
-                    <a data-toggle="collapse" href="#collapse3">History <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a>
-                    
-                    </a>
-                </li>
-                    <div id="collapse3" class="panel-collapse collapse">
-                        <li>
-                            <a href="#">Dashboard</a>
-                        </li>
-                        <li>
-                            <a href="#">Shortcuts</a>
-                        </li>
-                        <li>
-                            <a href="#">Overview</a>
-                        </li>
-                        <li>
-                            <a href="#">Events</a>
-                        </li>
-                        <li>
-                            <a href="#">About</a>
-                        </li>
-                        <li>
-                            <a href="#">Services</a>
-                        </li>
-                        <li>
-                            <a href="#">Contact</a>
-                        </li>
-                    </div>
-            </ul>
-            
+            <div ui-view='userList' ng-controller="ListCtrl"></div>
             
         
         </div>
