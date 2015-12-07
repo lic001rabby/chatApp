@@ -10,16 +10,19 @@ teamChat.config(function($stateProvider, $urlRouterProvider){
     
     $stateProvider
     .state('chatting', {
-        url: "/chat",
+        url: "/chat/{sessionID}",
         views: {
             mainModule: {
                 templateUrl: "templates/chatwindow.html"
+            },
+            'userList@chatting': {
+              templateUrl: "templates/userlist.html"
             },
            'chatbox@chatting': {
                 templateUrl: "templates/chatbox.html",
                 controller: "chatCtrl"
             }
-            
+                   
         }
     
     })
@@ -31,7 +34,8 @@ teamChat.config(function($stateProvider, $urlRouterProvider){
                 templateUrl: "templates/home.html"
             },
             'sessionList@home': {
-                templateUrl: "templates/sessionlists.html"
+                templateUrl: "templates/sessionlists.html",
+                controler: "ListCtrl"
             },
             'sessionForm@home': {
                 templateUrl: "templates/sessionform.html"
@@ -75,13 +79,25 @@ teamChat.controller('mainCtrl',['$scope','$location', '$cookies', 'sessionServic
 
 
 //active sessions list on sidebar controller
-teamChat.controller('ActiveListCtrl',['$scope', function ($scope) {
+teamChat.controller('ListCtrl',['$scope','listService', function ($scope, listService) {
   $scope.isCollapsed = false;
-}]);
+  $scope.class = 'glyphicon glyphicon-minus'
+  var myDataPromise = listService.getData('activechats');
+    myDataPromise.then(function(result) {  // this is only run after $http completes
+       $scope.maininfo.active = result;
+       console.log($scope.maininfo.active);
+    });
+    $scope.$watch('isCollapsed', function() {
+       
+       if($scope.isCollapsed === true) $scope.class = 'glyphicon glyphicon-plus';
+    });
+    
+    
+  
+  
 
-//completed sessions list on sidebar controller
-teamChat.controller('HistoryListCtrl', ['$scope', function ($scope) {
-  $scope.isCollapsed = false;
+  
+  
 }]);
 
 //handle the login form
@@ -98,7 +114,7 @@ teamChat.controller('loginCtrl',['$scope','$location', 'userService', function (
   
 }]);
 
-teamChat.controller('sessionCtrl',['$scope','$cookies', '$location', '$http', function ($scope, $cookies, $location, $http) {
+teamChat.controller('sessionCtrl',['$scope','$cookies', '$location', '$http','socketService', function ($scope, $cookies, $location, $http, socketService) {
   
   //adding a watcher for the session name
    $scope.$watch('sname', function(newVal, oldVal) {
@@ -109,34 +125,22 @@ teamChat.controller('sessionCtrl',['$scope','$cookies', '$location', '$http', fu
     
     
    $scope.submit = function() {
-     $http({
-      method: 'POST',
-      url: '/home',
-      data: {'sessionid': $scope.sname,
-             'username': $cookies.get('username')
-       }
-      
-    }).then(function successCallback(response) {
-        // this callback will be called asynchronously
-        // when the response is available
-        
-        $scope.maininfo.sessionid = $scope.sname;
-     $cookies.put('sessionid', $scope.sname);
-     console.log($scope.maininfo);
-     $location.path("/chat");
-      }, function errorCallback(response) {
-        // called asynchronously if an error occurs
-        // or server returns response with an error status.
-        console.log(response);
-      });
-     
+     socketService.socket.emit('create session', $scope.sname);
    }
+   
+   socketService.socket.on('session created', function(data){
+     console.log('session created');
+     $scope.maininfo.sessionname = data.sessionname;
+     $scope.maininfo.sessionid = data.sessionid;
+     $cookies.put('sessionid', data.sessionid);
+     $location.path("/chat");
+     
+   })
     
     
 }]);
 
-teamChat.controller('chatCtrl', [ '$scope', '$cookies' , function($scope, $cookies) {
-  var socket = io();
+teamChat.controller('chatCtrl', [ '$scope', '$cookies','socketService' , function($scope, $cookies,socketService) {
   $scope.$watch('msg', function(newval, oldval) {
        console.log(newval);
     });
@@ -150,7 +154,7 @@ teamChat.controller('chatCtrl', [ '$scope', '$cookies' , function($scope, $cooki
 
       
       // Tell the server your username
-      socket.emit('add user', username, sessionid);
+      socketService.socket.emit('add user', username, sessionid);
     }
   }
 
@@ -161,13 +165,13 @@ teamChat.controller('chatCtrl', [ '$scope', '$cookies' , function($scope, $cooki
     if (message) {
       // tell server to execute 'new message' and send along one parameter
       console.log(message);
-      socket.emit('new message', username, message);
+      socketService.socket.emit('new message', username, message);
     }
   };
   // Socket events
 
   // Whenever the server emits 'login', log the login message
-  socket.on('login', function (data) {
+  socketService.socket.on('login', function (data) {
     var connected = true;
     // Display the welcome message
     var message = "Welcome to this session about "+ data;
@@ -176,12 +180,12 @@ teamChat.controller('chatCtrl', [ '$scope', '$cookies' , function($scope, $cooki
   });
   
   // Whenever the server emits 'user joined', log it in the chat body
-  socket.on('user joined', function (data) {
+  socketService.socket.on('user joined', function (data) {
     console.log(data.username + ' joined ' + data.sessionname); 
   });
   
   //output the messages
-  socket.on('incoming message', function (data) {
+  socketService.socket.on('incoming message', function (data) {
     console.log(data.username + ' said- ' + data.message); 
   });
   
@@ -202,3 +206,34 @@ teamChat.service('sessionService', function(){
 teamChat.service('userService', function(){
     this.user = '';
 });
+
+teamChat.service('socketService', function(){
+    this.socket = io();
+});
+
+teamChat.service('listService',['$http', function($http) {
+  /*this.getActiveChats = function(){
+    $http({
+      method: 'GET',
+      url: '/api/activechats'
+    }).then(function successCallback(response) {
+      console.log(response.data);
+      return response.data;
+    
+    }, function errorCallback(response) {
+      console.log('error getting list'+ response);
+    
+  });
+  }*/
+  var getData = function(list) {
+
+        return $http({method:"GET", url:"/api/"+list}).then(function(result){
+            return result.data;
+        });
+    };
+    return { getData: getData };
+
+    
+  
+}])
+

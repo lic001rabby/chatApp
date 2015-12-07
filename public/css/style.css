@@ -76,3 +76,9 @@ button.login-btn {
 .form-bottom form .input-error {
 	border-color: #de615e;
 }
+
+[ng-click],
+[data-ng-click],
+[x-ng-click] {
+    cursor: pointer;
+}

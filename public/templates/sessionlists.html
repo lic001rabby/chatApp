@@ -1,42 +1,23 @@
-<div ng-controller="ActiveListCtrl">
+<div>
             
             <ul class="sidebar-nav">
                 <li class="sidebar-brand">
-                    <a href="#" ng-click="isCollapsed = !isCollapsed">Active Sessions <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a>
+                    <a ng-click="isCollapsed = !isCollapsed">Active Sessions <span aria-hidden="true" ng-class="class"></span></a>
                     
                     
                     </a>
                 </li>
                 <div uib-collapse="isCollapsed">
                     
-                        <li>
-                            <a href="#">Dashboard</a>
-                        </li>
-                        <li>
-                            <a href="#">Shortcuts</a>
-                        </li>
-                        <li>
-                            <a href="#">Overview</a>
-                        </li>
-                        <li>
-                            <a href="#">Events</a>
-                        </li>
-                        <li>
-                            <a href="#">About</a>
-                        </li>
-                        <li>
-                            <a href="#">Services</a>
-                        </li>
-                        <li>
-                            <a href="#">Contact</a>
-                        </li>
+                        <li ng-repeat="item in maininfo.active"><a href="/#/chat/{{item._id}}">{{item.sessionName}}</a></li>
+                       
                 </div>
             </ul>
             </div>
-            <div ng-controller="HistoryListCtrl">
+            <div>
             <ul class="sidebar-nav">
                 <li class="sidebar-brand">
-                    <a href="#" ng-click="isCollapsed = !isCollapsed">History <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a>
+                    <a ng-click="isCollapsed = !isCollapsed">History <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a>
                     
                     </a>
                 </li>
@@ -44,24 +25,7 @@
                         <li>
                             <a href="#">Dashboard</a>
                         </li>
-                        <li>
-                            <a href="#">Shortcuts</a>
-                        </li>
-                        <li>
-                            <a href="#">Overview</a>
-                        </li>
-                        <li>
-                            <a href="#">Events</a>
-                        </li>
-                        <li>
-                            <a href="#">About</a>
-                        </li>
-                        <li>
-                            <a href="#">Services</a>
-                        </li>
-                        <li>
-                            <a href="#">Contact</a>
-                        </li>
+                       
                     </div>
             </ul>
             </div>

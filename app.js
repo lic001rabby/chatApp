@@ -43,21 +43,29 @@ app.post('/login', urlencodedParser, function (req, res) {
 	  console.log(req.body.username);
 });
 
-//handle new session
 
-
-app.post('/home', function (req, res) {
-  if (!req.body) return res.sendStatus(400);
-	  console.log(req.body);
-    return res.sendStatus(200);
-});
-
-//DEBUG CODE
+//event handlers
 var usernames = {};
 var numUsers = 0;
 
 io.on('connection', function (socket) {
   var addedUser = false;
+  var chat = new Chat();
+  
+  
+  socket.on('create session', function(sname){
+    chat.sessionName = sname;
+    chat.chatStatus = 'waiting';
+    chat.save(function(err,sid){
+    if (err) throw err;
+    console.log(sid._id);
+    socket.emit('session created',{
+      sessionid: sid._id,
+      sessionname: sname
+    });
+    });
+    
+  });
 
   // when the client emits 'new message', this listens and executes
   socket.on('new message', function (username, message) {
@@ -95,17 +103,40 @@ io.on('connection', function (socket) {
  
 });
 
+
+//BUILDING REQUIRED API
+router.use(function(req, res, next) {
+    // do logging
+    console.log('Something is happening.');
+    next(); // make sure we go to the next routes and don't stop here
+});
+router.route('/activechats')
+  .get(function(req,res){
+    var query = Chat.find({ 'chatStatus': 'waiting' });
+    query.select('_oid sessionName chatStatus');
+    query.exec(function (err, list){
+      if(err) res.send(err);
+      res.json(list);
+});
+    
+  })
+router.get('/', function(req, res) {
+    res.json({ message: 'hooray! welcome to our api!' });   
+});
+app.use('/api', router);
+
+
+var query = Chat.find({ 'chatStatus': 'waiting' });
+query.select('_oid session chatStatus');
+query.exec(function (err, list){
+  console.log(JSON.stringify(list));
+});
+
 //database debug
+
+
 /*
-var chat = new Chat();
-chat.session = 'trial';
-
-//chat.save(function(err){
-//  if (err) throw err;
-//  console.log('saved');
-//})
-
-Chat.find ({}, '_id', function(err,ids){
+Chat.find ({}, '_id','session', 'status' function(err,ids){
   if (err) throw err;
   JSON.stringify(ids);
   console.log(ids);

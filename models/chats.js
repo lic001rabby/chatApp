@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var chatSchema = new Schema ({
-	session: String,
+	sessionName: String,
 	chatStatus: String,
 	startTime: Date,
 	chatLog:
