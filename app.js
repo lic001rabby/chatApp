@@ -49,8 +49,10 @@ var usernames = {};
 var numUsers = 0;
 
 io.on('connection', function (socket) {
+  
   var addedUser = false;
   var chat = new Chat();
+  socket.usernames = {};
   
   
   socket.on('create session', function(sname){
@@ -88,7 +90,7 @@ io.on('connection', function (socket) {
       console.log(username);
       console.log(sessionid);
     // add the client's username to the global list
-    usernames[username] = username;
+    socket.usernames[username] = username;
     
     ++numUsers;
     addedUser = true;
@@ -110,6 +112,8 @@ router.use(function(req, res, next) {
     console.log('Something is happening.');
     next(); // make sure we go to the next routes and don't stop here
 });
+
+//get list of active chats
 router.route('/activechats')
   .get(function(req,res){
     var query = Chat.find({ 'chatStatus': 'waiting' });
@@ -123,7 +127,24 @@ router.route('/activechats')
 router.get('/', function(req, res) {
     res.json({ message: 'hooray! welcome to our api!' });   
 });
-app.use('/api', router);
+
+//get a session name
+router.route('/:sessionId')
+  .get(function(req, res) {
+    var query = Chat.findById(req.params.sessionId);
+    query.select('sessionName');
+    query.exec(function (err, list){
+      if(err) res.send(err);
+      res.json(list);
+    });
+  });
+  
+router.get('/', function(req, res) {
+    res.json({ message: 'hooray! welcome to our api!' });   
+});
+
+
+app.use('/chats', router);
 
 
 var query = Chat.find({ 'chatStatus': 'waiting' });

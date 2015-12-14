@@ -8,6 +8,7 @@ var chatSchema = new Schema ({
 	chatLog:
 	{
 		_id: Object,
+		time: Number,
 		user: String,
 		message: String
 	}
