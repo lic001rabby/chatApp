@@ -182,7 +182,9 @@ teamChat.controller('chatCtrl', [ '$scope', '$cookies','$stateParams', 'socketSe
     var connected = true;
     // Display the welcome message
     var message = "Welcome to this session about "+ data;
-    console.log(message);
+    data.forEach(function(element) {
+      myEl.append('<li>'+element.userName+' on '+ element.time +': ' +element.data+'</li>');
+    }, this);
     myEl.append('<li>'+message+'</li>');
     
   });

@@ -4,14 +4,7 @@ var Schema = mongoose.Schema;
 var chatSchema = new Schema ({
 	sessionName: String,
 	chatStatus: String,
-	startTime: Date,
-	chatLog:
-	{
-		_id: Object,
-		time: Number,
-		user: String,
-		message: String
-	}
+	startTime: Date
 });
 
 module.exports = mongoose.model('Chat',chatSchema);

@@ -1,5 +1,6 @@
 var mongoose   = require('mongoose');
 var Chat = require('./models/chats.js')
+var Log = require('./models/logs.js')
 var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
@@ -8,6 +9,9 @@ var io = require('socket.io').listen(server);
 var router = express.Router();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+var moment = require('moment');
+moment().format();
+
 
 
 //starting the server
@@ -73,10 +77,22 @@ io.on('connection', function (socket) {
   socket.on('new message', function (username, message) {
     // we tell the client to execute 'new message'
     console.log(message);
-    socket.broadcast.to(socket.room).emit('incoming message', {
+    var log = new Log();
+    log.sessionId = socket.room;
+    log.userName = username;
+    log.time = moment();
+    log.data = message;
+    log.save(function(err, sid){
+      if (err) throw err;
+      console.log(sid._id);
+      socket.broadcast.to(socket.room).emit('incoming message', {
       username: username,
       message: message
     });
+      
+    });
+    
+    
   });
 
   // when the client emits 'add user', this listens and executes
@@ -94,7 +110,12 @@ io.on('connection', function (socket) {
     
     ++numUsers;
     addedUser = true;
-    socket.emit('login', sessionid);
+    var query = Log.find({ 'sessionId': sessionid });
+    query.select('userName time data');
+    query.exec(function (err, list){
+      if(err) throw err;
+      socket.emit('login', list);
+      })
     // echo globally (all clients) that a person has connected
     socket.broadcast.to(socket.room).emit('user joined', {
       username: socket.username,
