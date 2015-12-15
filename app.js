@@ -51,12 +51,13 @@ app.post('/login', urlencodedParser, function (req, res) {
 //event handlers
 
 var numUsers = 0;
-
+var usernames = {};
 io.on('connection', function (socket) {
-  var usernames = {};
+
   var addedUser = false;
   var chats = new Chat();
   var sessionLength = 15;
+  
   
   //timer debug
   socket.on('start',function(sessionid){
@@ -129,7 +130,7 @@ io.on('connection', function (socket) {
     // set the session
 		socket.join(sessionid);
     // add the client's username to the global list
-    usernames[username] = username;
+    usernames[sessionid] = username;
     console.log(usernames);
     addedUser = true;
     var query = Log.find({ 'sessionId': sessionid });
@@ -197,14 +198,22 @@ router.route('/:sessionId')
     });
   });
   
+router.route('/users/:sessionId')
+  .get(function(req, res) {
+    var query = Log.find({ 'sessionId': sessionid });
+    query.select('userName');
+    query.exec(function (err, list){
+      if(err) throw err;
+      res.json(list);
+    });
+  });
+  
 router.get('/', function(req, res) {
     res.json({ message: 'api base url' });   
 });
 
 
+
+
 app.use('/chats', router);
-
-
-
-
 
