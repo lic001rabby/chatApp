@@ -55,7 +55,7 @@ var numUsers = 0;
 io.on('connection', function (socket) {
   var usernames = {};
   var addedUser = false;
-  var chat = new Chat();
+  var chats = new Chat();
   var sessionLength = 15;
   
   //timer debug
@@ -86,14 +86,11 @@ io.on('connection', function (socket) {
   })
   })
   
- 
-
-  
   //create session request
   socket.on('create session', function(sname){
-    chat.sessionName = sname;
-    chat.chatStatus = 'waiting';
-    chat.save(function(err,sid){
+    chats.sessionName = sname;
+    chats.chatStatus = 'waiting';
+    chats.save(function(err,sid){
     if (err) throw err;
     socket.emit('session created',{
       sessionid: sid._id,
@@ -133,6 +130,7 @@ io.on('connection', function (socket) {
 		socket.join(sessionid);
     // add the client's username to the global list
     usernames[username] = username;
+    console.log(usernames);
     addedUser = true;
     var query = Log.find({ 'sessionId': sessionid });
     query.select('userName time data');

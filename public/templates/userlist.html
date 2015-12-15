@@ -1,14 +1,19 @@
 <div>
             
             <ul class="sidebar-nav">
-                <li class="sidebar-brand"><a href="/#/home/">Back To Home</a></li>
                 <li class="sidebar-brand">
-                    <a ng-click="isCollapsed = !isCollapsed">Active Sessions <span aria-hidden="true" ng-class="class"></span></a>
+                    <a href="/#/home/">Back To Home </a>
                     
                     
                     </a>
                 </li>
-                <div uib-collapse="isCollapsed">
+                <li class="sidebar-brand">
+                    <a ng-click="isCollapsed1 = !isCollapsed1">Active Sessions <span class="glyphicon glyphicon-plus" aria-hidden="true" ng-hide="!isCollapsed1"></span> <span class="glyphicon glyphicon-minus" aria-hidden="true" ng-hide="isCollapsed1"></span></a>
+                    
+                    
+                    </a>
+                </li>
+                <div uib-collapse="isCollapsed1">
                     
                         <li ng-repeat="item in maininfo.active"><a href="/#/chat/{{item._id}}">{{item.sessionName}}</a></li>
                        
@@ -18,14 +23,12 @@
             <div>
             <ul class="sidebar-nav">
                 <li class="sidebar-brand">
-                    <a ng-click="isCollapsed = !isCollapsed">History <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a>
+                    <a ng-click="isCollapsed2 = !isCollapsed2">History <span class="glyphicon glyphicon-plus" aria-hidden="true" ng-hide="!isCollapsed2"></span> <span class="glyphicon glyphicon-minus" aria-hidden="true" ng-hide="isCollapsed2"></span></a>
                     
                     </a>
                 </li>
-                    <div uib-collapse="isCollapsed">
-                        <li>
-                            <a href="#">Dashboard</a>
-                        </li>
+                    <div uib-collapse="isCollapsed2">
+                        <li ng-repeat="item in maininfo.ended"><a href="/#/chat/{{item._id}}">{{item.sessionName}}</a></li>
                        
                     </div>
             </ul>
@@ -38,7 +41,7 @@
 </div>
    <kbd> {{counter | secondsToDateTime | date:'HH:mm:ss'}}</kbd>
    
-   <button class="btn btn-warning" ng-click="stop()" ng-hide="maininfo.chatStatus === 'waiting' || 'ended'">Stop</button>
-   <button class="btn btn-warning" ng-click="start()" ng-hide="maininfo.chatStatus === 'active'">Start</button>
+   <button class="btn btn-warning" ng-click="stop()" ng-hide="maininfo.chatStatus === 'waiting' || maininfo.chatStatus === 'ended'">Stop</button>
+   <button class="btn btn-warning" ng-click="start()" ng-hide="maininfo.chatStatus === 'active' || maininfo.chatStatus === 'ended'">Start</button>
 </div>
             </div>

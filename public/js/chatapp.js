@@ -174,6 +174,7 @@ teamChat.controller('timeCtrl',['$scope', '$timeout', '$stateParams', 'socketSer
     }
 //stop button
     $scope.stop = function(){
+      $scope.maininfo.chatStatus = 'ended';
       socketService.socket.emit('stopped', $scope.maininfo.sessionid)
       $timeout.cancel(mytimeout);
     }
@@ -188,6 +189,7 @@ teamChat.controller('timeCtrl',['$scope', '$timeout', '$stateParams', 'socketSer
   });
   
     socketService.socket.on('ended',function(){
+     $scope.maininfo.chatStatus = 'ended';
      $timeout.cancel(mytimeout);
     })
     
