@@ -58,6 +58,25 @@ io.on('connection', function (socket) {
   var chat = new Chat();
   socket.usernames = {};
   
+  //timer debug
+  socket.on('start',function(sessionid){
+    Chat.findById(socket.room, function (err, chat) {
+  if (err) throw err;
+  
+  chat.startTime = moment();
+  chat.endTime = moment().add(45, "minutes");
+  chat.chatStatus = 'active';
+  
+  chat.save(function (err) {
+    if (err) throw err;
+    console.log(moment().add(45, "minutes"));
+    socket.broadcast.emit('started', moment().add(45, "minutes"));
+    
+      });
+    });
+  });
+
+  
   
   socket.on('create session', function(sname){
     chat.sessionName = sname;
@@ -149,11 +168,26 @@ router.get('/', function(req, res) {
     res.json({ message: 'hooray! welcome to our api!' });   
 });
 
+//get list of ended chats
+router.route('/endedchats')
+  .get(function(req,res){
+    var query = Chat.find({ 'chatStatus': 'ended' });
+    query.select('_oid sessionName chatStatus');
+    query.exec(function (err, list){
+      if(err) res.send(err);
+      res.json(list);
+});
+    
+  })
+router.get('/', function(req, res) {
+    res.json({ message: 'hooray! welcome to our api!' });   
+});
+
 //get a session name
 router.route('/:sessionId')
   .get(function(req, res) {
     var query = Chat.findById(req.params.sessionId);
-    query.select('sessionName');
+    query.select('sessionName chatStatus');
     query.exec(function (err, list){
       if(err) res.send(err);
       res.json(list);
@@ -187,6 +221,12 @@ Chat.find ({}, '_id','session', 'status' function(err,ids){
   }, this);
   
 });*/
+
+//timer debug
+
+
+
+
 
 
 

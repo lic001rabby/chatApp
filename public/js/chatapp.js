@@ -80,16 +80,23 @@ teamChat.controller('mainCtrl',['$scope','$location', '$cookies', 'sessionServic
 
 //active sessions list on sidebar controller
 teamChat.controller('ListCtrl',['$scope','listService', function ($scope, listService) {
-  $scope.isCollapsed = false;
-  $scope.class = 'glyphicon glyphicon-minus'
+  $scope.isCollapsed1 = false;
+  $scope.isCollapsed2 = false;
   var myDataPromise = listService.getData('activechats');
     myDataPromise.then(function(result) {  // this is only run after $http completes
        $scope.maininfo.active = result;
        console.log($scope.maininfo.active);
     });
-    $scope.$watch('isCollapsed', function() {
+    
+    myDataPromise = listService.getData('endedchats');
+    myDataPromise.then(function(result) {  // this is only run after $http completes
+       $scope.maininfo.ended = result;
+       console.log($scope.maininfo.ended);
+    });
+    
+    $scope.$watch('isCollapsed1', function() {
        
-       if($scope.isCollapsed === true) $scope.class = 'glyphicon glyphicon-plus';
+       if($scope.isCollapsed1 === true) $scope.class = 'glyphicon glyphicon-plus';
     });
     
     
@@ -123,7 +130,7 @@ teamChat.controller('sessionCtrl',['$scope','$cookies', '$location', '$http','so
        
     });
     
-    
+  //creating the session  
    $scope.submit = function() {
      socketService.socket.emit('create session', $scope.sname);
    }
@@ -140,6 +147,7 @@ teamChat.controller('sessionCtrl',['$scope','$cookies', '$location', '$http','so
     
 }]);
 
+//the chat controller
 teamChat.controller('chatCtrl', [ '$scope', '$cookies','$stateParams', 'socketService', 'listService' , function($scope, $cookies, $stateParams, socketService, listService) {
   $scope.$watch('msg', function(newval, oldval) {
     });
@@ -147,11 +155,13 @@ teamChat.controller('chatCtrl', [ '$scope', '$cookies','$stateParams', 'socketSe
    var dataPromise = listService.getData($stateParams.sessionid);
    dataPromise.then(function(result) {  // this is only run after $http completes
        $scope.maininfo.sessionname = result.sessionName;
+       $scope.maininfo.chatStatus = result.chatStatus;
        console.log($scope.maininfo.sessionname);
     });
    
    console.log('promised: '+ dataPromise.sessionName)
    var myEl = angular.element( document.querySelector( '#chat-log' ) );
+   
 //PRIMARY FUNCTIONS
   // Sets the client's username
   var setUsername = function (username, sessionid) {
@@ -181,7 +191,7 @@ teamChat.controller('chatCtrl', [ '$scope', '$cookies','$stateParams', 'socketSe
   socketService.socket.on('login', function (data) {
     var connected = true;
     // Display the welcome message
-    var message = "Welcome to this session about "+ data;
+    var message = 'Welcome to this session';
     data.forEach(function(element) {
       myEl.append('<li>'+element.userName+' on '+ element.time +': ' +element.data+'</li>');
     }, this);
@@ -197,17 +207,30 @@ teamChat.controller('chatCtrl', [ '$scope', '$cookies','$stateParams', 'socketSe
   //output the messages
   socketService.socket.on('incoming message', function (data) {
     console.log(data.username + ' said- ' + data.message);
-    myEl.append('<li>'+data.username + ' said- ' + data.message+'</li>');  
+    myEl.append('<li><span class="glyphicon glyphicon-user"></span> '+data.username + ' : ' + data.message+'</li>');  
+  });
+  socketService.socket.on('started', function(data){
+    console.log ('emitted started')
+    var endtime = moment(data);
+    var now = moment();
+    var timeleft = endtime.diff(now,'minutes', 'seconds');
+    console.log(timeleft);
+    
+    console.log(now);
   });
   
   //CODE IN ACTION
   setUsername($cookies.get('username'), $cookies.get('sessionid'), $scope.maininfo.sessionname);
   $scope.submit = function() {
     sendMessage($cookies.get('username'), $scope.msg);
-     myEl.append('<li>'+$scope.msg+'</li>'); 
+     myEl.append('<li><span class="glyphicon glyphicon-star"></span> You: '+$scope.msg+'</li>'); 
     $scope.msg = '';
     console.log('fired');
   }
+  $scope.reset = function(){
+   socketService.socket.emit('start', $scope.maininfo.sessionid);
+  };
+  
 }]);
 
 //SERVICES

@@ -82,3 +82,8 @@ button.login-btn {
 [x-ng-click] {
     cursor: pointer;
 }
+
+#chat-log >li
+{
+	list-style: none;
+}

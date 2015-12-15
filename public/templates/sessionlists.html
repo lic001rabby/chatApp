@@ -2,12 +2,12 @@
             
             <ul class="sidebar-nav">
                 <li class="sidebar-brand">
-                    <a ng-click="isCollapsed = !isCollapsed">Active Sessions <span aria-hidden="true" ng-class="class"></span></a>
+                    <a ng-click="isCollapsed1 = !isCollapsed1">Active Sessions <span class="glyphicon glyphicon-plus" aria-hidden="true" ng-hide="!isCollapsed1"></span> <span class="glyphicon glyphicon-minus" aria-hidden="true" ng-hide="isCollapsed1"></span></a>
                     
                     
                     </a>
                 </li>
-                <div uib-collapse="isCollapsed">
+                <div uib-collapse="isCollapsed1">
                     
                         <li ng-repeat="item in maininfo.active"><a href="/#/chat/{{item._id}}">{{item.sessionName}}</a></li>
                        
@@ -17,14 +17,12 @@
             <div>
             <ul class="sidebar-nav">
                 <li class="sidebar-brand">
-                    <a ng-click="isCollapsed = !isCollapsed">History <span class="glyphicon glyphicon-plus" aria-hidden="true"></span></a>
+                    <a ng-click="isCollapsed2 = !isCollapsed2">History <span class="glyphicon glyphicon-plus" aria-hidden="true" ng-hide="!isCollapsed2"></span> <span class="glyphicon glyphicon-minus" aria-hidden="true" ng-hide="isCollapsed2"></span></a>
                     
                     </a>
                 </li>
-                    <div uib-collapse="isCollapsed">
-                        <li>
-                            <a href="#">Dashboard</a>
-                        </li>
+                    <div uib-collapse="isCollapsed2">
+                        <li ng-repeat="item in maininfo.ended"><a href="/#/chat/{{item._id}}">{{item.sessionName}}</a></li>
                        
                     </div>
             </ul>
