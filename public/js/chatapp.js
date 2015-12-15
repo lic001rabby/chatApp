@@ -16,7 +16,8 @@ teamChat.config(function($stateProvider, $urlRouterProvider){
                 templateUrl: "templates/chatwindow.html"
             },
             'userList@chatting': {
-              templateUrl: "templates/userlist.html"
+              templateUrl: "templates/userlist.html",
+              controller: "timeCtrl"
             },
            'chatbox@chatting': {
                 templateUrl: "templates/chatbox.html",
@@ -61,15 +62,12 @@ teamChat.config(function($stateProvider, $urlRouterProvider){
 teamChat.controller('mainCtrl',['$scope','$location', '$cookies', 'sessionService', function ($scope, $location, $cookies, sessionService) {
     
    $cookies.put('sessionid', 'default');
-  var info = $cookies.getAll();
-  console.log(info);
   
 //setting the username
   $scope.maininfo = {};
   $scope.maininfo.username = $cookies.get('username');
   $scope.maininfo.sessionid = $cookies.get('sessionid');
   
-  console.log($scope.maininfo.username + ' is the username in main scope maininfo :debug');
   
  //if no username defined, redirecting to login page   
   if ($cookies.get('username') == 'undefined' || !($cookies.get('username')) ) {
@@ -85,18 +83,11 @@ teamChat.controller('ListCtrl',['$scope','listService', function ($scope, listSe
   var myDataPromise = listService.getData('activechats');
     myDataPromise.then(function(result) {  // this is only run after $http completes
        $scope.maininfo.active = result;
-       console.log($scope.maininfo.active);
     });
     
     myDataPromise = listService.getData('endedchats');
     myDataPromise.then(function(result) {  // this is only run after $http completes
        $scope.maininfo.ended = result;
-       console.log($scope.maininfo.ended);
-    });
-    
-    $scope.$watch('isCollapsed1', function() {
-       
-       if($scope.isCollapsed1 === true) $scope.class = 'glyphicon glyphicon-plus';
     });
     
     
@@ -125,8 +116,6 @@ teamChat.controller('sessionCtrl',['$scope','$cookies', '$location', '$http','so
   
   //adding a watcher for the session name
    $scope.$watch('sname', function(newVal, oldVal) {
-       console.log(newVal);
-       console.log($scope.maininfo);
        
     });
     
@@ -146,8 +135,10 @@ teamChat.controller('sessionCtrl',['$scope','$cookies', '$location', '$http','so
     
     
 }]);
-
+//controlling the timer
 teamChat.controller('timeCtrl',['$scope', '$timeout', '$stateParams', 'socketService','listService', function($scope, $timeout, $stateParams, socketService, listService){
+  
+  //initialising the timer
   var dataPromise = listService.getData($stateParams.sessionid);
    dataPromise.then(function(result) {  // this is only run after $http completes
        $scope.maininfo.sessionname = result.sessionName;
@@ -158,17 +149,15 @@ teamChat.controller('timeCtrl',['$scope', '$timeout', '$stateParams', 'socketSer
          var now = moment();
          var timeleft = endtime.diff(now, 'seconds');
          $scope.counter = timeleft;
-         console.log(timeleft);
     
     $scope.startTimeout();
        }
        if (result.chatStatus === 'waiting'){
-         $scope.counter = 2700;
+         $scope.counter = 900;
        }
        if (result.chatStatus === 'ended'){
          $scope.counter = 0;
        }
-       console.log(result.endTime);
     });
   
     $scope.startTimeout = function () {  
@@ -177,28 +166,25 @@ teamChat.controller('timeCtrl',['$scope', '$timeout', '$stateParams', 'socketSer
        
         mytimeout = $timeout($scope.startTimeout, 1000);  
     }  
-
+//start button
     $scope.start = function(){
+      $scope.maininfo.chatStatus = 'active';
       socketService.socket.emit('start', $scope.maininfo.sessionid);
       $scope.startTimeout();
     }
-
+//stop button
     $scope.stop = function(){
       socketService.socket.emit('stopped', $scope.maininfo.sessionid)
       $timeout.cancel(mytimeout);
     }
     
     socketService.socket.on('started', function(data){
-    console.log ('emitted started')
+    $scope.maininfo.chatStatus = 'active';
     var endtime = moment(data);
     var now = moment();
     var timeleft = endtime.diff(now, 'seconds');
     $scope.counter = timeleft;
     $scope.startTimeout();
-    
-    console.log(timeleft);
-    
-    console.log(now);
   });
   
     socketService.socket.on('ended',function(){
@@ -220,10 +206,8 @@ teamChat.controller('chatCtrl', [ '$scope', '$cookies','$stateParams', 'socketSe
        if (result.chatStatus === 'active'){
          $scope.maininfo.endtime = result.endTime;
        }
-       console.log($scope.maininfo.sessionname);
     });
    
-   console.log('promised: '+ dataPromise.sessionName)
    var myEl = angular.element( document.querySelector( '#chat-log' ) );
    
 //PRIMARY FUNCTIONS
@@ -270,7 +254,6 @@ teamChat.controller('chatCtrl', [ '$scope', '$cookies','$stateParams', 'socketSe
   
   //output the messages
   socketService.socket.on('incoming message', function (data) {
-    console.log(data.username + ' said- ' + data.message);
     myEl.append('<li><span class="glyphicon glyphicon-user"></span> '+data.username + ' : ' + data.message+'</li>');  
   });
   
@@ -282,9 +265,7 @@ teamChat.controller('chatCtrl', [ '$scope', '$cookies','$stateParams', 'socketSe
     $scope.msg = '';
     console.log('fired');
   }
-  $scope.reset = function(){
-   socketService.socket.emit('start', $scope.maininfo.sessionid);
-  };
+  
   
 }]);
 

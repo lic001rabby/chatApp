@@ -4,7 +4,8 @@ var Log = require('./models/logs.js')
 var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
-var server = app.listen(3000);
+var port = process.env.PORT || 3000;
+var server = app.listen(port);
 var io = require('socket.io').listen(server);
 var router = express.Router();
 app.use(bodyParser.json());
@@ -15,14 +16,14 @@ moment().format();
 
 
 //starting the server
-server.listen(3000);
+server.listen(port);
 
 //connecting to the database
 mongoose.connect('mongodb://teamchat:monkeyKing@ds063134.mongolab.com:63134/chats');
 
 
 
-var port = process.env.PORT || 3000;
+
 
 //app.use('/assets', express.static(__dirname + '/public'));
 app.use(express.static('public'));
@@ -44,20 +45,18 @@ app.post('/login', urlencodedParser, function (req, res) {
 		 
 	  });
 	  res.cookie('username', req.body.username);
-	  console.log(req.body.username);
 });
 
 
 //event handlers
-var usernames = {};
+
 var numUsers = 0;
 
 io.on('connection', function (socket) {
-  
+  var usernames = {};
   var addedUser = false;
   var chat = new Chat();
-  socket.usernames = {};
-  var sessionLength = 5;
+  var sessionLength = 15;
   
   //timer debug
   socket.on('start',function(sessionid){
@@ -70,13 +69,12 @@ io.on('connection', function (socket) {
   
   chat.save(function (err) {
     if (err) throw err;
-    console.log(moment().add(sessionLength, "minutes"));
     socket.broadcast.to(socket.room).emit('started', moment().add(sessionLength, "minutes"));
     
       });
     });
   });
-  
+ //ending session with stop button 
   socket.on('stopped', function(sessionid){
     Chat.findById(socket.room, function (err, chat) {
     if (err) throw err;
@@ -91,13 +89,12 @@ io.on('connection', function (socket) {
  
 
   
-  
+  //create session request
   socket.on('create session', function(sname){
     chat.sessionName = sname;
     chat.chatStatus = 'waiting';
     chat.save(function(err,sid){
     if (err) throw err;
-    console.log(sid._id);
     socket.emit('session created',{
       sessionid: sid._id,
       sessionname: sname
@@ -109,7 +106,6 @@ io.on('connection', function (socket) {
   // when the client emits 'new message', this listens and executes
   socket.on('new message', function (username, message) {
     // we tell the client to execute 'new message'
-    console.log(message);
     var log = new Log();
     log.sessionId = socket.room;
     log.userName = username;
@@ -117,7 +113,6 @@ io.on('connection', function (socket) {
     log.data = message;
     log.save(function(err, sid){
       if (err) throw err;
-      console.log(sid._id);
       socket.broadcast.to(socket.room).emit('incoming message', {
       username: username,
       message: message
@@ -136,12 +131,8 @@ io.on('connection', function (socket) {
 		socket.room = sessionid;
     // set the session
 		socket.join(sessionid);
-      console.log(username);
-      console.log(sessionid);
     // add the client's username to the global list
-    socket.usernames[username] = username;
-    
-    ++numUsers;
+    usernames[username] = username;
     addedUser = true;
     var query = Log.find({ 'sessionId': sessionid });
     query.select('userName time data');
@@ -163,14 +154,14 @@ io.on('connection', function (socket) {
 //BUILDING REQUIRED API
 router.use(function(req, res, next) {
     // do logging
-    console.log('Something is happening.');
+    console.log('api request');
     next(); // make sure we go to the next routes and don't stop here
 });
 
 //get list of active chats
 router.route('/activechats')
   .get(function(req,res){
-    var query = Chat.find({ 'chatStatus': 'waiting' });
+    var query = Chat.find({ 'chatStatus': { $in: ['active', 'waiting'] }});
     query.select('_oid sessionName chatStatus');
     query.exec(function (err, list){
       if(err) res.send(err);
@@ -209,37 +200,11 @@ router.route('/:sessionId')
   });
   
 router.get('/', function(req, res) {
-    res.json({ message: 'hooray! welcome to our api!' });   
+    res.json({ message: 'api base url' });   
 });
 
 
 app.use('/chats', router);
-
-
-var query = Chat.find({ 'chatStatus': 'waiting' });
-query.select('_oid session chatStatus');
-query.exec(function (err, list){
-  console.log(JSON.stringify(list));
-});
-
-//database debug
-
-
-/*
-Chat.find ({}, '_id','session', 'status' function(err,ids){
-  if (err) throw err;
-  JSON.stringify(ids);
-  console.log(ids);
-  ids.forEach(function(element) {
-    console.log(element._id);
-  }, this);
-  
-});*/
-
-//timer debug
-
-
-
 
 
 

@@ -4,7 +4,7 @@
 		<div class="panel-body">
 			<div id="chat-log"></div>															
 			<form id="chat" ng-submit="submit()">			                                                                                     
-				<div class="input-group" ng-hide="maininfo.chatStatus === 'ended'">
+				<div class="input-group" ng-hide="maininfo.chatStatus === 'ended' || maininfo.chatStatus === 'waiting'">
 					<input type="text" class="form-control" id="chat-input" ng-model="msg"/>
 					<span class="input-group-btn">
 						<button type="submit" class="btn btn-default" >Send Message</button>
@@ -13,9 +13,5 @@
 			</form>
 		</div>
 	</div>
-<a href="#menu-toggle" class="btn btn-default" id="menu-toggle">Toggle Menu</a>
-<div id="counter"></div>  
-<button id="reset" ng-click="reset()">Reset!</button> 
 
-<timer /> 
 </div>
