@@ -57,6 +57,7 @@ io.on('connection', function (socket) {
   var addedUser = false;
   var chat = new Chat();
   socket.usernames = {};
+  var sessionLength = 5;
   
   //timer debug
   socket.on('start',function(sessionid){
@@ -64,17 +65,30 @@ io.on('connection', function (socket) {
   if (err) throw err;
   
   chat.startTime = moment();
-  chat.endTime = moment().add(45, "minutes");
+  chat.endTime = moment().add(sessionLength, "minutes");
   chat.chatStatus = 'active';
   
   chat.save(function (err) {
     if (err) throw err;
-    console.log(moment().add(45, "minutes"));
-    socket.broadcast.emit('started', moment().add(45, "minutes"));
+    console.log(moment().add(sessionLength, "minutes"));
+    socket.broadcast.to(socket.room).emit('started', moment().add(sessionLength, "minutes"));
     
       });
     });
   });
+  
+  socket.on('stopped', function(sessionid){
+    Chat.findById(socket.room, function (err, chat) {
+    if (err) throw err;
+    chat.chatStatus = 'ended';
+    chat.save(function (err) {
+    if (err) throw err;
+    socket.broadcast.to(socket.room).emit('ended');
+    })
+  })
+  })
+  
+ 
 
   
   
@@ -187,7 +201,7 @@ router.get('/', function(req, res) {
 router.route('/:sessionId')
   .get(function(req, res) {
     var query = Chat.findById(req.params.sessionId);
-    query.select('sessionName chatStatus');
+    query.select('sessionName chatStatus endTime');
     query.exec(function (err, list){
       if(err) res.send(err);
       res.json(list);

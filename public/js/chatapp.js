@@ -147,6 +147,67 @@ teamChat.controller('sessionCtrl',['$scope','$cookies', '$location', '$http','so
     
 }]);
 
+teamChat.controller('timeCtrl',['$scope', '$timeout', '$stateParams', 'socketService','listService', function($scope, $timeout, $stateParams, socketService, listService){
+  var dataPromise = listService.getData($stateParams.sessionid);
+   dataPromise.then(function(result) {  // this is only run after $http completes
+       $scope.maininfo.sessionname = result.sessionName;
+       $scope.maininfo.chatStatus = result.chatStatus;
+       if (result.chatStatus === 'active'){
+         $scope.maininfo.endtime = result.endTime;
+         var endtime = moment($scope.maininfo.endtime);
+         var now = moment();
+         var timeleft = endtime.diff(now, 'seconds');
+         $scope.counter = timeleft;
+         console.log(timeleft);
+    
+    $scope.startTimeout();
+       }
+       if (result.chatStatus === 'waiting'){
+         $scope.counter = 2700;
+       }
+       if (result.chatStatus === 'ended'){
+         $scope.counter = 0;
+       }
+       console.log(result.endTime);
+    });
+  
+    $scope.startTimeout = function () {  
+        $scope.counter --; 
+        if ($scope.counter == 0) {$scope.stop();}
+       
+        mytimeout = $timeout($scope.startTimeout, 1000);  
+    }  
+
+    $scope.start = function(){
+      socketService.socket.emit('start', $scope.maininfo.sessionid);
+      $scope.startTimeout();
+    }
+
+    $scope.stop = function(){
+      socketService.socket.emit('stopped', $scope.maininfo.sessionid)
+      $timeout.cancel(mytimeout);
+    }
+    
+    socketService.socket.on('started', function(data){
+    console.log ('emitted started')
+    var endtime = moment(data);
+    var now = moment();
+    var timeleft = endtime.diff(now, 'seconds');
+    $scope.counter = timeleft;
+    $scope.startTimeout();
+    
+    console.log(timeleft);
+    
+    console.log(now);
+  });
+  
+    socketService.socket.on('ended',function(){
+     $timeout.cancel(mytimeout);
+    })
+    
+    
+}]);
+
 //the chat controller
 teamChat.controller('chatCtrl', [ '$scope', '$cookies','$stateParams', 'socketService', 'listService' , function($scope, $cookies, $stateParams, socketService, listService) {
   $scope.$watch('msg', function(newval, oldval) {
@@ -156,6 +217,9 @@ teamChat.controller('chatCtrl', [ '$scope', '$cookies','$stateParams', 'socketSe
    dataPromise.then(function(result) {  // this is only run after $http completes
        $scope.maininfo.sessionname = result.sessionName;
        $scope.maininfo.chatStatus = result.chatStatus;
+       if (result.chatStatus === 'active'){
+         $scope.maininfo.endtime = result.endTime;
+       }
        console.log($scope.maininfo.sessionname);
     });
    
@@ -208,15 +272,6 @@ teamChat.controller('chatCtrl', [ '$scope', '$cookies','$stateParams', 'socketSe
   socketService.socket.on('incoming message', function (data) {
     console.log(data.username + ' said- ' + data.message);
     myEl.append('<li><span class="glyphicon glyphicon-user"></span> '+data.username + ' : ' + data.message+'</li>');  
-  });
-  socketService.socket.on('started', function(data){
-    console.log ('emitted started')
-    var endtime = moment(data);
-    var now = moment();
-    var timeleft = endtime.diff(now,'minutes', 'seconds');
-    console.log(timeleft);
-    
-    console.log(now);
   });
   
   //CODE IN ACTION
@@ -297,4 +352,10 @@ teamChat.directive('stateLoadingIndicator', function($rootScope) {
     }
   };
 })
+
+teamChat.filter('secondsToDateTime', [function() {
+    return function(seconds) {
+        return new Date(1970, 0, 1).setSeconds(seconds);
+    };
+}])
 

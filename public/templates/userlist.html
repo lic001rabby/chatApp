@@ -29,4 +29,16 @@
                        
                     </div>
             </ul>
+            <div ng-controller="timeCtrl">
+	<div class="progress">
+  <div class="progress-bar" role="progressbar" aria-valuenow="{{counter}}"
+  aria-valuemin="0" aria-valuemax="600" ng-style="{width:counter/{{counter}}*100+'%'}">
+    <span class="sr-only">{{counter}}% Complete</span>
+  </div>
+</div>
+   <kbd> {{counter | secondsToDateTime | date:'HH:mm:ss'}}</kbd>
+   
+   <button class="btn btn-warning" ng-click="stop()" ng-hide="maininfo.chatStatus === 'waiting' || 'ended'">Stop</button>
+   <button class="btn btn-warning" ng-click="start()" ng-hide="maininfo.chatStatus === 'active'">Start</button>
+</div>
             </div>
